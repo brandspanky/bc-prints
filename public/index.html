@@ -96,6 +96,593 @@ legend { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; colo
 .price small { font-family: var(--body); font-size: 12px; color: var(--muted); margin-left: 8px; letter-spacing: .02em; }
 .primary { background: var(--ink); color: #fff; border: 0; padding: 16px 20px; cursor: pointer; font-size: 12px; letter-spacing: .16em; text-transform: uppercase; transition: background .2s; }
 .primary:hover { background: var(--accent); }
+.primary:disabled { opacity: .5; cursor: default; }
+.fine { font-size: 12px; color: var(--muted); margin: 0; }
+.added { font-size: 13px; color: var(--accent); min-height: 1.4em; margin: 0; }
+
+/* About */
+.about { max-width: 62ch; margin: 0 auto; }
+.about h1 { font-family: var(--display); font-weight: 400; font-size: 40px; margin: 0 0 24px; }
+.about p { color: #4a4c50; }
+.about-photo { margin: 32px 0; }
+.about-photo img { display: block; width: 100%; max-width: 338px; height: auto; }
+
+/* Cart drawer */
+.scrim { position: fixed; inset: 0; background: rgba(28,29,31,.18); opacity: 0; pointer-events: none; transition: opacity .25s; }
+.drawer { position: fixed; top: 0; right: 0; height: 100%; width: min(420px, 100%); background: var(--wall); border-left: 1px solid var(--hairline); transform: translateX(100%); transition: transform .3s ease; display: grid; grid-template-rows: auto 1fr auto; }
+body.cart-open .scrim { opacity: 1; pointer-events: auto; }
+body.cart-open .drawer { transform: none; }
+.drawer-head { display: flex; justify-content: space-between; align-items: baseline; padding: 32px 32px 20px; border-bottom: 1px solid var(--hairline); }
+.drawer-head h2 { font-family: var(--display); font-weight: 400; font-size: 28px; margin: 0; }
+.close { background: none; border: 0; cursor: pointer; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.lines { overflow-y: auto; padding: 8px 32px; }
+.line { display: grid; grid-template-columns: 64px 1fr auto; gap: 16px; padding: 20px 0; border-bottom: 1px solid var(--hairline); align-items: start; }
+.line .thumb { width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; }
+.line h4 { font-family: var(--display); font-weight: 400; font-size: 19px; margin: 0; }
+.line p { margin: 2px 0 0; font-size: 12px; color: var(--muted); }
+.line .amt { font-variant-numeric: tabular-nums; font-size: 14px; text-align: right; }
+.line .rm { background: none; border: 0; padding: 0; margin-top: 6px; font-size: 11px; color: var(--muted); cursor: pointer; text-decoration: underline; }
+.empty { color: var(--muted); padding: 32px 0; }
+.drawer-foot { padding: 24px 32px 32px; border-top: 1px solid var(--hairline); display: grid; gap: 14px; }
+.subtotal { display: flex; justify-content: space-between; font-variant-numeric: tabular-nums; }
+.demo-note { font-size: 12px; color: var(--accent); margin: 0; min-height: 1.4em; }
+
+footer { padding: 0 clamp(20px, 6vw, 88px) 48px; font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+@media (max-width: 820px) {
+  .detail, .detail.landscape .panel { grid-template-columns: 1fr; }
+  .panel { position: static; }
+  .detail.portrait-img .photo { max-width: 520px; margin: 0 auto; width: 100%; }
+}
+@media (max-width: 640px) {
+  .trio { flex-direction: column; max-width: 560px; margin: 0 auto; }
+  .trio a { width: 100%; }
+}
+@media (max-width: 480px) {
+  header { flex-direction: column; gap: 14px; }
+  .options { grid-template-columns: 1fr 1fr 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="mark" href="#home">Bruce Cotton<span class="tagline">Art Prints</span></a>
+  <nav aria-label="Main">
+    <a href="#home" data-nav="home">Home</a>
+    <a href="#prints" data-nav="prints">Prints</a>
+    <a href="#about" data-nav="about">About</a>
+    <button class="cart-btn" id="cartBtn" type="button">Cart (<span id="cartCount">0</span>)</button>
+  </nav>
+</header>
+
+<main>
+  <!-- Home: one photograph -->
+  <section class="view" id="view-home">
+    <div class="home" id="homeWrap">
+      <a class="photo-link" id="homeLink" href="#print-morcote"><div class="photo" id="homePhoto"></div></a>
+      <div class="caption">
+        <h2 id="homeTitle"></h2>
+        <p id="homePlace"></p>
+      </div>
+      <a class="text-link" href="#prints">View all prints</a>
+    </div>
+  </section>
+
+  <!-- Prints: three per view -->
+  <section class="view" id="view-prints">
+    <div class="collection-head">
+      <h1>Prints</h1>
+      <div class="pager">
+        <button type="button" id="prevPage">Previous</button>
+        <span id="pageLabel">1 / 2</span>
+        <button type="button" id="nextPage">Next</button>
+      </div>
+    </div>
+    <div class="trio" id="trio"></div>
+  </section>
+
+  <!-- Single print with purchase options -->
+  <section class="view" id="view-print">
+    <div class="detail" id="detail">
+      <div class="photo" id="detailPhoto"></div>
+      <div class="panel">
+        <div class="intro">
+          <a class="back" href="#prints">Back to prints</a>
+          <div>
+            <h1 id="detailTitle"></h1>
+            <p class="desc" id="detailDesc"></p>
+          </div>
+        </div>
+
+        <div class="purchase">
+        <fieldset>
+          <legend>Material</legend>
+          <div class="options" id="materialOpts"></div>
+          <p class="mat-note" id="matNote"></p>
+        </fieldset>
+
+        <fieldset>
+          <legend>Size (inches)</legend>
+          <div class="options" id="sizeOpts"></div>
+        </fieldset>
+
+        <div class="buy">
+          <div class="price" id="price"></div>
+          <button class="primary" type="button" id="addBtn">Add to cart</button>
+          <p class="added" id="addedMsg" aria-live="polite"></p>
+          <p class="fine">Printed to order and shipped ready to hang. Allow 7 to 10 business days.</p>
+        </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- About -->
+  <section class="view" id="view-about">
+    <div class="about">
+      <h1>About</h1>
+      <p>Honestly? The selling part isn’t really why I’m here. Though I suppose it validates the work somehow. And it helps keep the lights on.</p>
+      <p>I shoot because I love it. Simple as that.</p>
+      <p>Most of these images were made in Switzerland, where I lived for five years, and along the Carolina coast, where I live now.</p>
+      <p>There are moments when I can see the finished image before I’ve even pressed the shutter — the light, the frame, the feeling. And then there are the happy accidents, the shots that break every rule and somehow work better because of it. Imperfection has a way of creating its own composition.</p>
+      <p>So I hope you enjoy a few. And if you’re moved to purchase something, I trust my friend has designed the website to make it easy to happen.</p>
+      <p>And I thank you. And Otis thanks you.</p>
+      <figure class="about-photo"><img src="img/about.jpg" alt="Bruce Cotton at home with Otis" width="338" height="450"></figure>
+      <p>Every print is made to order on archival paper, gallery-wrapped canvas, or aluminum, in up to three different sizes. Choose a photograph, choose how you want it to hang, and it ships ready for the wall.</p>
+    </div>
+  </section>
+
+  <!-- Thank you (after Stripe checkout) -->
+  <section class="view" id="view-thanks">
+    <div class="about">
+      <h1>Thank you</h1>
+      <p>Your order is in. A receipt is on its way to your email.</p>
+      <p>Each print is made to order, then packed and shipped directly to you. Most orders arrive within two weeks.</p>
+      <p><a href="#prints">Back to the prints</a></p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <span>&copy; 2026 Bruce Cotton Photography</span>
+  <span>Wilmington, North Carolina</span>
+</footer>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-label="Cart" aria-hidden="true">
+  <div class="drawer-head">
+    <h2>Cart</h2>
+    <button class="close" type="button" id="closeCart">Close</button>
+  </div>
+  <div class="lines" id="lines"></div>
+  <div class="drawer-foot">
+    <div class="subtotal"><span>Subtotal</span><span id="subtotal">$0</span></div>
+    <p class="fine">Free shipping. Any sales tax is added at checkout.</p>
+    <button class="primary" type="button" id="checkoutBtn">Check out</button>
+    <p class="demo-note" id="demoNote" aria-live="polite"></p>
+  </div>
+</aside>
+
+<script>
+// ---- Catalog (placeholder images: swap in real files at build time) ----
+// Catalog: title and description are placeholders until copy is written.
+// master = the full-resolution file in FINAL 40 that the lab prints from.
+// Listed in display order: coastal first. maxSizes limits a print to its
+// smallest sizes when the file can't hold detail at the larger ones.
+const RAW = [
+  { id: "p17", n: 17, title: "Tideline", desc: "Beach break at Wrightsville Beach, NC.", master: "L1012601-Edit.tif", w: 2400, h: 1597, px: 9520 },
+  { id: "p41", n: 41, title: "Solitude", desc: "Lone fisher, early morning, Wrightsville Beach, NC.", master: "2013_COT5990-rev1111FB.jpg", w: 2400, h: 1597, px: 2800 },
+  { id: "p52", n: 52, title: "Fly Over", desc: "Pelicans doing a low flyby, Wrightsville Beach, NC.", master: "_COT5959-3-Edit.jpg", w: 2400, h: 1597, px: 15000, maxSizes: 2 },
+  { id: "p53", n: 53, title: "Gilded", desc: "Wave cresting at the shoreline, Wrightsville Beach, NC.", master: "_COT6005-4-Edit.jpg", w: 2400, h: 1597, px: 8450, maxSizes: 2 },
+  { id: "p54", n: 54, title: "Emerald", desc: "Beautiful wave break, Wrightsville Beach, NC.", master: "_COT6017-2-Edit.jpg", w: 2400, h: 1597, px: 9000, maxSizes: 2 },
+  { id: "p42", n: 42, title: "Spartina", desc: "Salt marsh between the beach and the mainland, Wrightsville Beach, NC.", master: "2014_BSC0884-rev11381410261-3FB.jpg", w: 2400, h: 1598, px: 2800 },
+  { id: "p43", n: 43, title: "Ebb", desc: "Sunset over Banks Channel, Wrightsville Beach, NC.", master: "2015_BSC4708-rev1546FB-3.jpg", w: 2400, h: 1602, px: 2800 },
+  { id: "p18", n: 18, title: "Roost", desc: "Pelicans on the pilings at dusk, Banks Channel, Wrightsville Beach, NC.", master: "L1010723-Edit.jpg", w: 2400, h: 1600, px: 5355 },
+  { id: "p20", n: 20, title: "Season", desc: "Coastline at Wrightsville Beach, NC.", master: "L1012540-Enhanced-NR-Edit.jpg", w: 2400, h: 1597, px: 9075 },
+  { id: "p44", n: 44, title: "Shallow Water", desc: "Shallow end of a sunbathed pool, Wrightsville Beach, NC.", master: "L1010598-Edit-Edit-2-Edit-2.jpg", w: 2400, h: 1623, px: 7267 },
+  { id: "p45", n: 45, title: "Mooring", desc: "Masts at mooring, Lake Geneva, Switzerland.", master: "SIV01466.tif", w: 1600, h: 2400, px: 9504 },
+  { id: "p19", n: 19, title: "Sticks", desc: "Sailboats, Lake Geneva near Lausanne, Switzerland.", master: "_BSC4254-Edit-Edit copy 2.jpg", w: 2400, h: 1600, px: 5905 },
+  { id: "p12", n: 12, title: "Duo Linger", desc: "Two chairs on the waterfront, near New Bern, NC.", master: "_SIV2400-Edit.jpg", w: 2400, h: 1600, px: 9504 },
+  { id: "p15", n: 15, title: "Tranquility", desc: "Student studying on a pier, Lake Geneva, Switzerland.", master: "_COT2817-Edit-Edit-2.jpg", w: 1597, h: 2400, px: 8000 },
+  { id: "p16", n: 16, title: "Morcote", desc: "Sunset, Morcote, Switzerland.", master: "_SIV7914-Edit-Edit-Edit.jpg", w: 2400, h: 1600, px: 8929 },
+  { id: "p46", n: 46, title: "Steam", desc: "Lovely steam rising from a soup bowl with a stack of crackers.", master: "2017_BSC6093-rev1636.jpg", w: 1602, h: 2400, px: 4650 },
+  { id: "p47", n: 47, title: "Topple", desc: "Mother-in-law’s tongue, potted and on the porch.", master: "_BSC7246-Edit-2.jpg", w: 2400, h: 1600, px: 5518 },
+  { id: "p40", n: 40, title: "About Face", desc: "Sunflowers from the wrong direction.", master: "_SIV4552-Edit2.jpg", w: 2400, h: 1600, px: 9009 },
+  { id: "p22", n: 22, title: "Dahlia", desc: "Macro shot of the fantastic geometry of a dahlia.", master: "SIV01693-Edit.jpg", w: 2400, h: 1600, px: 8488 },
+  { id: "p48", n: 48, title: "Curve", desc: "Waves of fabric.", master: "L1000134-Edit-Edit.jpg", w: 2400, h: 1602, px: 7288 },
+  { id: "p23", n: 23, title: "Ember", desc: "Red dahlia, macro.", master: "_SIV4835-2-Edit.jpg", w: 2400, h: 1600, px: 9504 },
+  { id: "p49", n: 49, title: "Tulips", desc: "A burst of tulips showing off the geometry of flowers.", master: "L1010948-Edit-Edit.jpg", w: 2400, h: 1601, px: 8079 },
+  { id: "p39", n: 39, title: "Still", desc: "Dry arrangement.", master: "BSC03372-Enhanced-NR-Edit.jpg", w: 2400, h: 1600, px: 9148 },
+  { id: "p21", n: 21, title: "Plumage", desc: "Close-up of peacock plumage.", master: "_BSC9976-Edit-Edit-Edit.jpg", w: 2400, h: 1602, px: 8334 },
+  { id: "p24", n: 24, title: "Lily", desc: "Lily pond at twilight.", master: "_BSC6931-Edit-Edit-Edit.tif", w: 2400, h: 1602, px: 5600 },
+  { id: "p50", n: 50, title: "Lichen", desc: "Lichen in a Swiss Wald (forest).", master: "SIV00325-2-Edit_copy.tif", w: 2400, h: 1600, px: 6653 },
+  { id: "p26", n: 26, title: "Canopy", desc: "Overhead in a Zurich alley, Switzerland.", master: "Q1010527-Edit-Edit-2.jpg", w: 2400, h: 1602, px: 7274 },
+  { id: "p28", n: 28, title: "Daydream", desc: "My coffee table reflecting the sky, and a morning lungo, Zurich, Switzerland.", master: "L1000021-Edit-Edit.jpg", w: 2400, h: 1602, px: 8368 },
+  { id: "p29", n: 29, title: "Porch", desc: "Rocking chairs in black and white, Wrightsville Beach, NC.", master: "L1010533.jpg", w: 1602, h: 2400, px: 7315 },
+  { id: "p30", n: 30, title: "Descent", desc: "Geometric stairwell, Ticino, Switzerland.", master: "_BSC4958-Edit-2.tif", w: 1600, h: 2400, px: 6000 },
+  { id: "p31", n: 31, title: "Passerby", desc: "Swiss surveillance. Pedestrian with a Handy, walking in front of vivid street art, Zurich, Switzerland.", master: "_BSC7943 copy-Edit-Edit.jpg", w: 2400, h: 1600, px: 5691 },
+  { id: "p32", n: 32, title: "Antiquariat", desc: "A galerie and bookstore in Zurich, Switzerland.", master: "_BSC4180-Edit-Edit-2.tif", w: 2400, h: 1600, px: 5719 },
+  { id: "p37", n: 37, title: "Poissonnerie", desc: "Home shutters, small village in France near the Swiss border.", master: "BSC01160-Edit-Edit-2.jpg", w: 1600, h: 2400, px: 9508 },
+  { id: "p34", n: 34, title: "Mother’s Day", desc: "Baby orangutan holding on to Mother.", master: "_BSC9896-Edit-Edit-Edit.jpg", w: 2400, h: 1602, px: 4633 },
+  { id: "p51", n: 51, title: "Skin So Soft", desc: "Tight shot of a rhino in sunlight and shadow.", master: "bnweye.jpg", w: 2400, h: 1602, px: 6866 },
+  { id: "p35", n: 35, title: "Ascent", desc: "Hot air balloon festival near Raleigh, NC.", master: "_BSC3693-Edit-2 copy.jpg", w: 2400, h: 1602, px: 6016 },
+  { id: "p01", n: 1, title: "Morcote at Night", desc: "Night shot of the waterfront, Morcote, Switzerland.", master: "_SIV7877-Edit-Edit.jpg", w: 2400, h: 1600, px: 7795 },
+  { id: "p09", n: 9, title: "Zermatt Blanket", desc: "View of the peaceful, snow-covered pedestrian village of Zermatt, Switzerland.", master: "L1060307-Enhanced-NR-Edit-Edit-Edit.jpg", w: 2400, h: 1626, px: 6200 },
+  { id: "p03", n: 3, title: "Red Line", desc: "A less-known alternative to the Bernina Express, Switzerland.", master: "BSC05391-Enhanced-NR-Edit-2.tif", w: 2400, h: 1600, px: 9300 },
+  { id: "p02", n: 2, title: "Lavaux", desc: "Drone shot of the vineyards along the shore of Lake Geneva, western Switzerland.", master: "DJI_0078-Enhanced-NR-Edit-3.tif", w: 2400, h: 1800, px: 3938 },
+  { id: "p07", n: 7, title: "Switchback", desc: "Drone shot of the snow-covered road just outside Gstaad, Switzerland.", master: "DJI_0297.jpg", w: 2400, h: 1797, px: 5272 },
+  { id: "p04", n: 4, title: "Reveal", desc: "One of the most beautiful spots in Europe: looking across Lake Lugano toward Italy, near Morcote, Switzerland.", master: "L1020183-Edit-Edit-Edit.jpg", w: 2400, h: 1602, px: 8368 },
+  { id: "p05", n: 5, title: "Wake", desc: "Lake Lugano morning, Switzerland.", master: "L1020663-2.jpg", w: 2400, h: 1601, px: 8277 },
+  { id: "p55", n: 55, title: "Writing on the Wall", desc: "Typewriters strangely posted on the wall in a shop in Switzerland.", master: "L1000825-Edit.jpg", w: 2400, h: 1602, px: 6767 },
+  { id: "p56", n: 56, title: "Threadlight", desc: "Silk loom in Tamil Nadu, India.", master: "DSC_0745-Edit-Edit.jpg", w: 2400, h: 1596, px: 6768 }
+];
+const PRINTS = RAW.map(p => ({
+  ...p,
+  title: p.title || "Untitled " + String(p.n).padStart(2, "0"),
+  place: "",
+  desc: p.desc || "Description to come.",
+  orient: p.w >= p.h ? "landscape" : "portrait"
+}));
+const ratio = (p) => p.w / p.h;
+const FEATURED = "p17";
+
+// 2:3 sizes print the full Leica frame with no cropping (short side × long side)
+// Full 2:3 size ladder. Each print shows the two smallest sizes plus the
+// largest one its file can hold (see sizesFor below).
+const SIZES = [
+  { id: "12x18", label: "12 × 18", long: 18 },
+  { id: "16x24", label: "16 × 24", long: 24 },
+  { id: "20x30", label: "20 × 30", long: 30 },
+  { id: "24x36", label: "24 × 36", long: 36 },
+  { id: "30x45", label: "30 × 45", long: 45 }
+];
+const MATERIALS = [
+  { id: "paper", label: "Paper", note: "Museum-grade cotton rag paper with a soft matte surface. Ships flat, ready for your frame." },
+  { id: "canvas", label: "Canvas", note: "Gallery-wrapped on a 1.5 inch frame with black edges, so the whole image stays on the front. Arrives ready to hang." },
+  { id: "metal", label: "Metal", note: "Printed on aluminum with a semi-gloss finish that keeps reflections low. Float-mounted to sit off the wall." }
+];
+// Placeholder retail prices in USD: set real prices against lab cost
+const PRICES = {
+  paper:  { "12x18": 95,  "16x24": 245, "20x30": 325, "24x36": 475, "30x45": 595 },
+  canvas: { "12x18": 325, "16x24": 395, "20x30": 495, "24x36": 725, "30x45": 950 },
+  metal:  { "12x18": 295, "16x24": 425, "20x30": 595, "24x36": 850, "30x45": 1195 }
+};
+
+// ---- Print formats (size templates) ----
+// Each format is a set of sizes that match a photo's shape. A print's format is
+// chosen automatically from its pixel dimensions, so new photos need no setup.
+// To support another shape, add one entry here with its sizes and prices.
+const FORMATS = {
+  "2:3": { ratio: 3 / 2, sizes: SIZES },              // Leica and most cameras
+  "4:3": { ratio: 4 / 3, sizes: [                     // DJI drone frame
+      { id: "18x24", label: "18 × 24", long: 24 }
+    ],
+    // Placeholder retail prices in USD
+    prices: {
+      paper:  { "18x24": 245 },
+      canvas: { "18x24": 450 },
+      metal:  { "18x24": 475 }
+    }
+  }
+};
+Object.values(FORMATS).forEach(f => f.prices &&
+  Object.keys(f.prices).forEach(m => Object.assign(PRICES[m], f.prices[m])));
+const ALL_SIZES = Object.values(FORMATS).flatMap(f => f.sizes);
+function formatOf(p) {
+  const r = Math.max(p.w, p.h) / Math.min(p.w, p.h);
+  return Object.keys(FORMATS).reduce((best, k) =>
+    Math.abs(FORMATS[k].ratio - r) < Math.abs(FORMATS[best].ratio - r) ? k : best, "2:3");
+}
+// A size is offered only if the file holds at least MIN_PPI at that size,
+// measured on the native pixels of the print master (px = its long side).
+const MIN_PPI = 145;
+function sizesFor(p) {
+  const ladder = FORMATS[formatOf(p)].sizes;
+  const fits = ladder.filter(s => !p.px || p.px / s.long >= MIN_PPI);
+  const offer = fits.slice(0, 2);
+  if (fits.length > 2) offer.push(fits[fits.length - 1]);   // largest it can hold
+  return offer.slice(0, p.maxSizes || 3);
+}
+
+const $ = (s) => document.querySelector(s);
+const money = (n) => "$" + n.toLocaleString("en-US");
+
+// ---- Photo renderer ----
+function paint(el, print, large) {
+  el.style.aspectRatio = `${print.w} / ${print.h}`;
+  el.innerHTML = "";
+  const img = document.createElement("img");
+  img.src = `img/${large ? "full" : "sm"}/${print.id}.jpg`;
+  img.alt = print.title;
+  img.decoding = "async";
+  if (!large) img.loading = "lazy";
+  el.appendChild(img);
+}
+
+// ---- Prints, three per view ----
+let page = 0;
+const PER = 3;
+const pages = Math.ceil(PRINTS.length / PER);
+function renderTrio() {
+  const wrap = $("#trio");
+  wrap.innerHTML = "";
+  PRINTS.slice(page * PER, page * PER + PER).forEach(p => {
+    const a = document.createElement("a");
+    a.href = "#print-" + p.id;
+    a.style.flex = `${ratio(p)} 1 0`;
+    const ph = document.createElement("div");
+    ph.className = "photo";
+    paint(ph, p);
+    const from = Math.min(...sizesFor(p).map(s => PRICES.paper[s.id]));
+    a.append(ph);
+    const cap = document.createElement("div");
+    cap.innerHTML = `<h3></h3>${p.desc !== "Description to come." ? '<p class="cap-desc"></p>' : ""}<p>From ${money(from)}</p>`;
+    cap.querySelector("h3").textContent = p.title;
+    if (cap.querySelector(".cap-desc")) cap.querySelector(".cap-desc").textContent = p.desc;
+    a.appendChild(cap);
+    wrap.appendChild(a);
+  });
+  $("#pageLabel").textContent = `${page + 1} / ${pages}`;
+  $("#prevPage").disabled = page === 0;
+  $("#nextPage").disabled = page === pages - 1;
+}
+$("#prevPage").onclick = () => { if (page > 0) { page--; renderTrio(); } };
+$("#nextPage").onclick = () => { if (page < pages - 1) { page++; renderTrio(); } };
+
+// ---- Print detail ----
+let current = null;
+let choice = { material: "canvas", size: "16x24" };
+
+function buildOptions() {
+  $("#materialOpts").innerHTML = MATERIALS.map(m => `
+    <div class="opt">
+      <input type="radio" name="material" id="mat-${m.id}" value="${m.id}" ${m.id === choice.material ? "checked" : ""}>
+      <label for="mat-${m.id}">${m.label}</label>
+    </div>`).join("");
+  renderSizes();
+  document.querySelectorAll('input[name="material"]').forEach(r =>
+    r.addEventListener("change", e => { choice.material = e.target.value; renderSizes(); updatePrice(); }));
+}
+function renderSizes() {
+  $("#sizeOpts").innerHTML = sizesFor(current).map(s => `
+    <div class="opt">
+      <input type="radio" name="size" id="size-${s.id}" value="${s.id}" ${s.id === choice.size ? "checked" : ""}>
+      <label for="size-${s.id}">${s.label}<small>${money(PRICES[choice.material][s.id])}</small></label>
+    </div>`).join("");
+  document.querySelectorAll('input[name="size"]').forEach(r =>
+    r.addEventListener("change", e => { choice.size = e.target.value; updatePrice(); }));
+}
+function updatePrice() {
+  const mat = MATERIALS.find(m => m.id === choice.material);
+  $("#matNote").textContent = mat.note;
+  $("#price").innerHTML = `${money(PRICES[choice.material][choice.size])}<small>${mat.label}, ${ALL_SIZES.find(s => s.id === choice.size).label} in</small>`;
+  $("#addedMsg").textContent = "";
+}
+function showPrint(id) {
+  current = PRINTS.find(p => p.id === id) || PRINTS[0];
+  $("#detail").classList.toggle("landscape", current.orient === "landscape");
+  $("#detail").classList.toggle("portrait-img", current.orient === "portrait");
+  const fits = sizesFor(current);
+  if (!fits.some(s => s.id === choice.size)) choice.size = fits[Math.min(1, fits.length - 1)].id;
+  paint($("#detailPhoto"), current, true);
+  $("#detailTitle").textContent = current.title;
+  $("#detailDesc").textContent = current.desc + (current.place ? " " + current.place + "." : "");
+  buildOptions();
+  updatePrice();
+}
+
+// ---- Cart ----
+let cart = [];
+try { cart = JSON.parse(localStorage.getItem("bc-cart") || "[]"); } catch (e) { cart = []; }
+cart = cart.filter(l => PRINTS.some(p => p.id === l.id) && PRICES[l.material] && PRICES[l.material][l.size]);
+function saveCart() { try { localStorage.setItem("bc-cart", JSON.stringify(cart)); } catch (e) {} }
+
+$("#addBtn").onclick = () => {
+  const key = `${current.id}|${choice.material}|${choice.size}`;
+  const found = cart.find(l => l.key === key);
+  if (found) found.qty++;
+  else cart.push({ key, id: current.id, material: choice.material, size: choice.size, qty: 1 });
+  saveCart(); renderCart();
+  $("#addedMsg").textContent = "Added to your cart.";
+};
+function renderCart() {
+  const count = cart.reduce((a, l) => a + l.qty, 0);
+  $("#cartCount").textContent = count;
+  const lines = $("#lines");
+  if (!cart.length) {
+    lines.innerHTML = '<p class="empty">Your cart is empty.</p>';
+  } else {
+    lines.innerHTML = "";
+    cart.forEach((l, i) => {
+      const p = PRINTS.find(x => x.id === l.id);
+      const mat = MATERIALS.find(m => m.id === l.material).label;
+      const size = ALL_SIZES.find(s => s.id === l.size).label;
+      const row = document.createElement("div");
+      row.className = "line";
+      const thumb = document.createElement("div"); thumb.className = "thumb";
+      const ph = document.createElement("div"); ph.className = "photo"; paint(ph, p);
+      if (p.orient === "portrait") ph.style.width = Math.round(64 * p.w / p.h) + "px";
+      thumb.appendChild(ph);
+      row.appendChild(thumb);
+      row.insertAdjacentHTML("beforeend", `
+        <div><h4>${p.title}</h4><p>${mat}, ${size} in${l.qty > 1 ? " · Qty " + l.qty : ""}</p>
+        <button class="rm" type="button" data-i="${i}">Remove</button></div>
+        <div class="amt">${money(PRICES[l.material][l.size] * l.qty)}</div>`);
+      lines.appendChild(row);
+    });
+    lines.querySelectorAll(".rm").forEach(b => b.onclick = () => { cart.splice(+b.dataset.i, 1); saveCart(); renderCart(); });
+  }
+  $("#subtotal").textContent = money(cart.reduce((a, l) => a + PRICES[l.material][l.size] * l.qty, 0));
+  $("#demoNote").textContent = "";
+}
+function openCart() { document.body.classList.add("cart-open"); $("#drawer").setAttribute("aria-hidden", "false"); }
+function closeCart() { document.body.classList.remove("cart-open"); $("#drawer").setAttribute("aria-hidden", "true"); }
+$("#cartBtn").onclick = openCart;
+$("#closeCart").onclick = closeCart;
+$("#scrim").onclick = closeCart;
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeCart(); });
+$("#checkoutBtn").onclick = async () => {
+  const btn = $("#checkoutBtn"), note = $("#demoNote");
+  if (!cart.length) { note.textContent = "Add a print to check out."; return; }
+  btn.disabled = true; note.textContent = "Opening secure checkout…";
+  try {
+    const r = await fetch("/api/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items: cart.map(l => ({ id: l.id, material: l.material, size: l.size, qty: l.qty })) })
+    });
+    const d = await r.json().catch(() => ({}));
+    if (r.ok && d.url) { location.href = d.url; return; }
+    note.textContent = d.error || "Checkout is unavailable right now. Please try again shortly.";
+  } catch (e) {
+    note.textContent = "Checkout is unavailable right now. Please check your connection and try again.";
+  }
+  btn.disabled = false;
+};
+
+// ---- Routing ----
+function route() {
+  const h = location.hash.replace("#", "") || "home";
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  let nav = h;
+  if (h.startsWith("print-")) {
+    showPrint(h.slice(6));
+    $("#view-print").classList.add("active");
+    nav = "prints";
+  } else if (h === "thanks") {
+    cart = []; saveCart(); renderCart(); closeCart();
+    $("#view-thanks").classList.add("active"); nav = "";
+  } else if (["home", "prints", "about"].includes(h)) {
+    $("#view-" + h).classList.add("active");
+  } else {
+    $("#view-home").classList.add("active"); nav = "home";
+  }
+  document.querySelectorAll("nav a").forEach(a => {
+    if (a.dataset.nav === nav) a.setAttribute("aria-current", "page");
+    else a.removeAttribute("aria-current");
+  });
+  window.scrollTo(0, 0);
+}
+window.addEventListener("hashchange", route);
+
+function renderHome() {
+  const p = PRINTS.find(x => x.id === FEATURED);
+  $("#homeWrap").classList.toggle("portrait", p.orient === "portrait");
+  $("#homeLink").href = "#print-" + p.id;
+  $("#homeLink").setAttribute("aria-label", p.title + ", view print");
+  paint($("#homePhoto"), p, true);
+  $("#homeTitle").textContent = p.title;
+  $("#homePlace").textContent = p.desc !== "Description to come." ? p.desc : "";
+}
+renderHome();
+renderTrio();
+renderCart();
+route();
+</script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bruce Cotton Prints</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Work+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Layout idea: a quiet white gallery wall. One to three images per view, generous margins, the purchase panel sits beside the print like a wall label. */
+  --wall: #ffffff;
+  --ink: #1c1d1f;
+  --muted: #7b7e83;
+  --hairline: #e6e7e9;
+  --mat: #f4f4f3;
+  --accent: #2f4a5a;
+  --display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --body: "Work Sans", "Helvetica Neue", Arial, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--wall); color: var(--ink); }
+body { font-family: var(--body); font-weight: 300; font-size: 15px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 1px solid var(--accent); outline-offset: 4px; }
+
+/* Header */
+header { display: flex; align-items: baseline; justify-content: space-between; gap: 24px; padding: 40px clamp(20px, 6vw, 88px) 0; }
+.mark { font-family: var(--display); font-size: 26px; letter-spacing: .01em; text-decoration: none; display: grid; gap: 2px; line-height: 1.1; }
+.tagline { font-family: var(--body); font-size: 11px; font-weight: 400; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+nav { display: flex; gap: clamp(16px, 3vw, 36px); align-items: baseline; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; }
+nav a { text-decoration: none; color: var(--muted); padding-bottom: 2px; border-bottom: 1px solid transparent; }
+nav a:hover, nav a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--ink); }
+.cart-btn { background: none; border: 0; cursor: pointer; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding: 0; }
+.cart-btn:hover { color: var(--ink); }
+.cart-btn span { color: var(--ink); }
+
+main { padding: clamp(48px, 9vw, 120px) clamp(20px, 6vw, 88px) 96px; }
+.view { display: none; }
+.view.active { display: block; }
+
+/* Photo frame (placeholders until real images are dropped in) */
+.photo { position: relative; background: var(--mat); overflow: hidden; display: block; width: 100%; }
+.photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+/* Home: one image */
+.home { display: grid; justify-items: center; gap: 28px; }
+.home a.photo-link { width: 100%; max-width: 1040px; display: block; }
+.home.portrait a.photo-link { max-width: 560px; }
+.caption { text-align: center; }
+.caption h2 { font-family: var(--display); font-weight: 400; font-size: 30px; margin: 0; text-wrap: balance; }
+.caption p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+.text-link { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; text-decoration: none; border-bottom: 1px solid var(--ink); padding-bottom: 2px; }
+
+/* Collection: three per view */
+.collection-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 56px; flex-wrap: wrap; }
+.collection-head h1 { font-family: var(--display); font-weight: 400; font-size: 40px; margin: 0; }
+.pager { display: flex; gap: 20px; align-items: center; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.pager button { background: none; border: 0; cursor: pointer; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; padding: 4px 0; }
+.pager button:disabled { color: var(--hairline); cursor: default; }
+/* Justified row: every image shares one height, widths follow each photo's shape */
+.trio { display: flex; gap: clamp(28px, 4vw, 56px); align-items: start; }
+.trio a { text-decoration: none; display: grid; gap: 18px; min-width: 0; }
+.trio .photo { transition: opacity .3s ease; }
+.trio a:hover .photo { opacity: .88; }
+.trio h3 { font-family: var(--display); font-weight: 400; font-size: 22px; margin: 0; }
+.trio p { margin: 0; font-size: 13px; color: var(--muted); }
+.trio .cap-desc { color: #4a4c50; margin: 2px 0 4px; }
+
+/* Print detail: one image + purchase panel */
+/* Portrait: image left, panel right. Landscape: image across the top, details and purchase below in two columns. */
+.detail { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(280px, .75fr); gap: clamp(40px, 7vw, 112px); align-items: start; }
+.panel { position: sticky; top: 40px; display: grid; gap: 30px; }
+.intro, .purchase { display: grid; gap: 30px; align-content: start; }
+.detail.landscape { grid-template-columns: 1fr; gap: clamp(40px, 5vw, 72px); max-width: 1160px; margin: 0 auto; }
+.detail.landscape .panel { position: static; grid-template-columns: minmax(0, 1fr) minmax(300px, 420px); gap: clamp(40px, 7vw, 112px); align-items: start; }
+.back { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; text-decoration: none; color: var(--muted); }
+.back:hover { color: var(--ink); }
+.panel h1 { font-family: var(--display); font-weight: 400; font-size: 44px; line-height: 1.05; margin: 0 0 10px; text-wrap: balance; }
+.panel .desc { margin: 0; color: #4a4c50; max-width: 42ch; }
+fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 10px; }
+legend { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; padding: 0; }
+.options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.opt { position: relative; }
+.opt input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.opt label { display: grid; gap: 2px; text-align: center; padding: 12px 6px; border: 1px solid var(--hairline); cursor: pointer; font-size: 13px; transition: border-color .15s; }
+.opt label small { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.opt input:checked + label { border-color: var(--ink); }
+.opt input:focus-visible + label { outline: 1px solid var(--accent); outline-offset: 3px; }
+.mat-note { font-size: 13px; color: var(--muted); margin: 4px 0 0; min-height: 3.2em; }
+.buy { display: grid; gap: 14px; border-top: 1px solid var(--hairline); padding-top: 26px; }
+.price { font-family: var(--display); font-size: 34px; font-variant-numeric: tabular-nums; }
+.price small { font-family: var(--body); font-size: 12px; color: var(--muted); margin-left: 8px; letter-spacing: .02em; }
+.primary { background: var(--ink); color: #fff; border: 0; padding: 16px 20px; cursor: pointer; font-size: 12px; letter-spacing: .16em; text-transform: uppercase; transition: background .2s; }
+.primary:hover { background: var(--accent); }
 .fine { font-size: 12px; color: var(--muted); margin: 0; }
 .added { font-size: 13px; color: var(--accent); min-height: 1.4em; margin: 0; }
 
