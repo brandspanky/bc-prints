@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Orders</title>
+<style>
+  :root { --ink: #1c1d1f; --muted: #7b7e83; --line: #e6e7e9; --accent: #2f4a5a; --ok: #2e6b3f; --warn: #9a5b12; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 300 15px/1.55 "Work Sans", "Helvetica Neue", Arial, sans-serif; color: var(--ink); background: #fff; }
+  main { max-width: 860px; margin: 0 auto; padding: 48px 24px 96px; }
+  h1 { font-weight: 400; font-size: 26px; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 32px; font-size: 13px; }
+  .badge { display: inline-block; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; padding: 3px 8px; border: 1px solid var(--line); margin-left: 8px; }
+  .badge.test { color: var(--warn); border-color: var(--warn); }
+  .order { border-top: 1px solid var(--line); padding: 24px 0; display: grid; grid-template-columns: 1fr auto; gap: 8px 24px; }
+  .order h2 { font-weight: 400; font-size: 17px; margin: 0; }
+  .meta { color: var(--muted); font-size: 13px; }
+  ul { margin: 8px 0 0; padding-left: 18px; }
+  .addr { font-size: 13px; color: var(--muted); margin-top: 8px; white-space: pre-line; }
+  .side { text-align: right; min-width: 180px; }
+  .total { font-size: 17px; }
+  button { background: var(--ink); color: #fff; border: 0; padding: 12px 18px; cursor: pointer; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; margin-top: 10px; }
+  button:hover { background: var(--accent); }
+  button:disabled { background: #b9bbbf; cursor: default; }
+  .state { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; margin-top: 10px; }
+  .state.sent { color: var(--ok); }
+  .msg { font-size: 13px; color: var(--warn); margin-top: 8px; }
+  form { display: flex; gap: 8px; }
+  input { flex: 1; padding: 12px; border: 1px solid var(--line); font: inherit; }
+  @media (max-width: 600px) { .order { grid-template-columns: 1fr; } .side { text-align: left; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Orders <span id="mode" class="badge"></span></h1>
+  <p class="sub">Paid orders from cotton.gallery. Review each one, then approve it to send it to WHCC.</p>
+  <form id="login" hidden>
+    <input id="tok" type="password" placeholder="Admin token" autocomplete="current-password">
+    <button type="submit">Open</button>
+  </form>
+  <div id="list"></div>
+</main>
+<script>
+const $ = (s) => document.querySelector(s);
+let token = "";
+try { token = sessionStorage.getItem("bc-admin") || ""; } catch (e) {}
+if (location.hash.startsWith("#token=")) { token = decodeURIComponent(location.hash.slice(7)); history.replaceState(null, "", location.pathname); }
+
+async function api(method, body) {
+  const r = await fetch("/api/orders", {
+    method,
+    headers: { Authorization: "Bearer " + token, ...(body ? { "Content-Type": "application/json" } : {}) },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const d = await r.json().catch(() => ({}));
+  if (r.status === 401) { showLogin(); throw new Error("Not authorized"); }
+  if (!r.ok) throw new Error(d.error || "Request failed");
+  return d;
+}
+function showLogin() { $("#login").hidden = false; $("#list").innerHTML = ""; }
+$("#login").onsubmit = (e) => { e.preventDefault(); token = $("#tok").value.trim(); try { sessionStorage.setItem("bc-admin", token); } catch (e) {} $("#login").hidden = true; load(); };
+
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const usd = (n) => "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2 });
+
+async function load() {
+  if (!token) return showLogin();
+  try { sessionStorage.setItem("bc-admin", token); } catch (e) {}
+  $("#list").innerHTML = '<p class="meta">Loading…</p>';
+  try {
+    const d = await api("GET");
+    $("#mode").textContent = d.mode === "live" ? "Live" : "Test mode";
+    $("#mode").className = "badge" + (d.mode === "live" ? "" : " test");
+    if (!d.orders.length) { $("#list").innerHTML = '<p class="meta">No paid orders yet.</p>'; return; }
+    $("#list").innerHTML = d.orders.map(render).join("");
+    document.querySelectorAll("button[data-id]").forEach((b) => (b.onclick = () => approve(b)));
+  } catch (e) { $("#list").innerHTML = `<p class="msg">${esc(e.message)}</p>`; }
+}
+
+function render(o) {
+  const a = o.shipping;
+  const addr = a ? [a.name, a.addr1, a.addr2, `${a.city}, ${a.state} ${a.zip}`].filter(Boolean).join("\n") : "No address";
+  const when = new Date(o.created * 1000).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
+  const sent = o.whcc.state === "submitted";
+  return `<section class="order">
+    <div>
+      <h2>${esc(a?.name || o.email || "Order")}</h2>
+      <div class="meta">${esc(when)} · ${esc(o.email || "")}${o.phone ? " · " + esc(o.phone) : ""}</div>
+      <ul>${o.items.map((l) => `<li>${esc(l.title)}: ${esc(l.label)}${l.qty > 1 ? " × " + l.qty : ""}</li>`).join("")}</ul>
+      <div class="addr">${esc(addr)}</div>
+    </div>
+    <div class="side">
+      <div class="total">${usd(o.total)}</div>
+      ${sent
+        ? `<div class="state sent">Sent to WHCC</div><div class="meta">${esc(o.whcc.submission)}</div>`
+        : `<button data-id="${esc(o.id)}">${o.whcc.state === "building" ? "Finish sending" : "Approve"}</button><div class="msg" id="m-${esc(o.id)}"></div>`}
+    </div>
+  </section>`;
+}
+
+async function approve(btn) {
+  const id = btn.dataset.id;
+  const msg = $("#m-" + CSS.escape(id));
+  btn.disabled = true;
+  try {
+    if (btn.textContent === "Approve") {
+      if (!confirm("Send this order to WHCC for printing?")) { btn.disabled = false; return; }
+      msg.textContent = "Preparing print files…";
+      await api("POST", { action: "build", id });
+    }
+    msg.textContent = "Waiting for WHCC to check the files…";
+    let ready = false;
+    for (let i = 0; i < 40 && !ready; i++) {
+      await new Promise((r) => setTimeout(r, 3000));
+      const s = await api("POST", { action: "status", id });
+      ready = s.ready;
+      const bad = s.items.find((x) => /error|fail|invalid|reject/i.test(x.status || ""));
+      if (bad) throw new Error("WHCC reported a problem with a file: " + bad.status);
+    }
+    if (!ready) throw new Error("WHCC is still checking. Click Finish sending in a minute.");
+    msg.textContent = "Placing the order…";
+    await api("POST", { action: "submit", id });
+    load();
+  } catch (e) {
+    msg.textContent = e.message;
+    btn.textContent = "Finish sending";
+    btn.disabled = false;
+  }
+}
+load();
+</script>
+</body>
+</html>
