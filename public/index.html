@@ -63,6 +63,7 @@ main { padding: clamp(48px, 9vw, 120px) clamp(20px, 6vw, 88px) 96px; }
 .pager { display: flex; gap: 20px; align-items: center; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .pager button { background: none; border: 0; cursor: pointer; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; padding: 4px 0; }
 .pager button:disabled { color: var(--hairline); cursor: default; }
+.pager-bottom { justify-content: flex-end; margin-top: 56px; }
 /* Justified row: every image shares one height, widths follow each photo's shape */
 .trio { display: flex; gap: clamp(28px, 4vw, 56px); align-items: start; }
 .trio a { text-decoration: none; display: grid; gap: 18px; min-width: 0; }
@@ -198,12 +199,17 @@ footer { padding: 0 clamp(20px, 6vw, 88px) 48px; font-size: 12px; color: var(--m
     <div class="collection-head">
       <h1>Prints</h1>
       <div class="pager">
-        <button type="button" id="prevPage">Previous</button>
-        <span id="pageLabel">1 / 2</span>
-        <button type="button" id="nextPage">Next</button>
+        <button type="button" class="prev-page" id="prevPage">Previous</button>
+        <span class="page-label" id="pageLabel">1 of 2</span>
+        <button type="button" class="next-page" id="nextPage">Next</button>
       </div>
     </div>
     <div class="trio" id="trio"></div>
+    <div class="pager pager-bottom">
+      <button type="button" class="prev-page">Previous</button>
+      <span class="page-label">1 of 2</span>
+      <button type="button" class="next-page">Next</button>
+    </div>
   </section>
 
   <!-- Single print with purchase options -->
@@ -483,12 +489,19 @@ function renderTrio() {
     a.appendChild(cap);
     wrap.appendChild(a);
   });
-  $("#pageLabel").textContent = `${page + 1} / ${pages}`;
-  $("#prevPage").disabled = page === 0;
-  $("#nextPage").disabled = page === pages - 1;
+  document.querySelectorAll(".page-label").forEach(el => el.textContent = `${page + 1} of ${pages}`);
+  document.querySelectorAll(".prev-page").forEach(b => b.disabled = page === 0);
+  document.querySelectorAll(".next-page").forEach(b => b.disabled = page === pages - 1);
 }
-$("#prevPage").onclick = () => { if (page > 0) { page--; renderTrio(); } };
-$("#nextPage").onclick = () => { if (page < pages - 1) { page++; renderTrio(); } };
+function turnPage(step, fromBottom) {
+  const next = page + step;
+  if (next < 0 || next > pages - 1) return;
+  page = next; renderTrio();
+  // From the bottom pager, return to the top of the prints so the new page starts in view
+  if (fromBottom) $("#view-prints").scrollIntoView({ block: "start" });
+}
+document.querySelectorAll(".prev-page").forEach(b => b.onclick = () => turnPage(-1, !!b.closest(".pager-bottom")));
+document.querySelectorAll(".next-page").forEach(b => b.onclick = () => turnPage(1, !!b.closest(".pager-bottom")));
 
 // ---- Print detail ----
 let current = null;
