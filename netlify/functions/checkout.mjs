@@ -36,6 +36,8 @@ export default async (req) => {
       method: "POST",
       body: {
         mode: "payment",
+        // Cards only (this includes Apple Pay and Google Pay); no pay-later options.
+        payment_method_types: ["card"],
         line_items: items.map((l) => ({
           quantity: l.qty,
           price_data: {
