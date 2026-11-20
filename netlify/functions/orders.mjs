@@ -73,6 +73,16 @@ export default async (req) => {
   if (!process.env.ADMIN_TOKEN || !safeEqual(auth, process.env.ADMIN_TOKEN)) return json({ error: "Not authorized" }, 401);
 
   try {
+    if (req.method === "GET" && new URL(req.url).searchParams.get("info") === "account") {
+      // Read-only: what buyers see from Stripe (name, statement descriptor, links).
+      const a = await stripe("/account");
+      const bp = a.business_profile || {}, pay = a.settings?.payments || {}, card = a.settings?.card_payments || {};
+      return json({
+        mode: stripeMode(), publicName: bp.name, supportEmail: bp.support_email, url: bp.url,
+        statementDescriptor: pay.statement_descriptor, cardPrefix: card.statement_descriptor_prefix,
+        branding: a.settings?.dashboard?.display_name,
+      });
+    }
     if (req.method === "GET") {
       const list = await stripe("/checkout/sessions", {
         query: { limit: 30, status: "complete", "expand[]": "data.payment_intent" },
