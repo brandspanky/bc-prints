@@ -1,5 +1,7 @@
 [build]
   publish = "public"
+  # Portrait images were uploaded to /portraits; copy them where the site expects them.
+  command = "mkdir -p public/img/portraits && cp portraits/*.jpg public/img/portraits/"
   functions = "netlify/functions"
 
 [functions]
