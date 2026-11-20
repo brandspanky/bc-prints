@@ -24,13 +24,14 @@ export async function whcc(path, { method = "GET", body, headers = {} } = {}) {
   return { status: res.status, data };
 }
 
-// The finishes bc chose: rag paper, black-edge premium canvas, semi-gloss float-mount metal.
+// The finishes bc chose: rag paper, black-edge premium canvas with matte coating,
+// semi-gloss float-mount metal.
 export function whccProduct(material, size) {
   if (material === "paper") return { productId: "fine-art-print", selections: { size, paper: "photo_rag_matte" } };
   if (material === "metal") return { productId: "metal-print", selections: { size, surface: "white_semi_gloss", display_options: "3_4in_float_mount" } };
   if (material === "canvas") {
     const base = {
-      canvas_type: "premium_fine_art", depth: "1_1_2in", protection: "no_lamination",
+      canvas_type: "premium_fine_art", depth: "1_1_2in", protection: "matte",
       gallery_wrap_edge: "black_edge", all_hanging_hardware: "sawtooth_hangers_bumpers_paper_backing",
     };
     // WHCC has no stock canvas at these sizes, so they are ordered as custom sizes.
