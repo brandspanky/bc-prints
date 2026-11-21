@@ -283,7 +283,7 @@ footer { padding: 0 clamp(20px, 6vw, 88px) 48px; font-size: 12px; color: var(--m
       <h1>About</h1>
       <p>Honestly? The selling part isn’t really why I’m here. Though I suppose it validates the work somehow. And it helps keep the lights on.</p>
       <p>I shoot because I love it. Simple as that.</p>
-      <p>Most of these images were made in places I’ve lived: five years in Switzerland, a year in India and many trips back since, and the Carolina coast, where I live now.</p>
+      <p>Most of these images were made in places I’ve lived: five years in Switzerland, a year in India and trips back since, and the Carolina coast, where I live now.</p>
       <p>There are moments when I can see the finished image before I’ve even pressed the shutter — the light, the frame, the feeling. And then there are the happy accidents, the shots that break every rule and somehow work better because of it. Imperfection has a way of creating its own composition.</p>
       <p>So I hope you enjoy a few. And if you’re moved to purchase something, I trust my friend has designed the website to make it easy to happen.</p>
       <p>And I thank you. And Otis thanks you.</p>
@@ -337,6 +337,8 @@ footer { padding: 0 clamp(20px, 6vw, 88px) 48px; font-size: 12px; color: var(--m
 // Listed in display order: coastal first. maxSizes limits a print to its
 // smallest sizes when the file can't hold detail at the larger ones.
 const RAW = [
+  { id: "p57", n: 57, title: "Warp", desc: "Silk loom abstract, India.", master: "Silk_Loom_Abstract_30x45_200ppi.jpg", w: 2400, h: 1600, px: 9000 },
+  { id: "p56", n: 56, title: "Threadlight", desc: "Silk loom in Tamil Nadu, India.", master: "DSC_0745-Edit-Edit.jpg", w: 2400, h: 1596, px: 6768 },
   { id: "p17", n: 17, title: "Tideline", desc: "Beach break at Wrightsville Beach, NC.", master: "L1012601-Edit.tif", w: 2400, h: 1597, px: 9520 },
   { id: "p41", n: 41, title: "Solitude", desc: "Lone fisher, early morning, Wrightsville Beach, NC.", master: "2013_COT5990-rev1111FB.jpg", w: 2400, h: 1597, px: 2800 },
   { id: "p52", n: 52, title: "Fly Over", desc: "Pelicans doing a low flyby, Wrightsville Beach, NC.", master: "_COT5959-3-Edit.jpg", w: 2400, h: 1597, px: 15000, maxSizes: 2 },
@@ -379,9 +381,7 @@ const RAW = [
   { id: "p07", n: 7, title: "Switchback", desc: "Drone shot of the snow-covered road just outside Gstaad, Switzerland.", master: "DJI_0297.jpg", w: 2400, h: 1797, px: 5272 },
   { id: "p04", n: 4, title: "Reveal", desc: "One of the most beautiful spots in Europe: looking across Lake Lugano toward Italy, near Morcote, Switzerland.", master: "L1020183-Edit-Edit-Edit.jpg", w: 2400, h: 1602, px: 8368 },
   { id: "p05", n: 5, title: "Wake", desc: "Lake Lugano morning, Switzerland.", master: "L1020663-2.jpg", w: 2400, h: 1601, px: 8277 },
-  { id: "p55", n: 55, title: "Writing on the Wall", desc: "Typewriters strangely posted on the wall in a shop in Switzerland.", master: "L1000825-Edit.jpg", w: 2400, h: 1602, px: 6767 },
-  { id: "p56", n: 56, title: "Threadlight", desc: "Silk loom in Tamil Nadu, India.", master: "DSC_0745-Edit-Edit.jpg", w: 2400, h: 1596, px: 6768 },
-  { id: "p57", n: 57, title: "Warp", desc: "Silk loom abstract, India.", master: "Silk_Loom_Abstract_30x45_200ppi.jpg", w: 2400, h: 1600, px: 9000 }
+  { id: "p55", n: 55, title: "Writing on the Wall", desc: "Typewriters strangely posted on the wall in a shop in Switzerland.", master: "L1000825-Edit.jpg", w: 2400, h: 1602, px: 6767 }
 ];
 const PRINTS = RAW.map(p => ({
   ...p,
