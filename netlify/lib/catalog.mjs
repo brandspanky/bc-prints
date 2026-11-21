@@ -7,7 +7,6 @@ export const PRINTS = {"p17":{"title":"Tideline","master":"L1012601-Edit.tif","s
  "p42":{"title":"Spartina","master":"2014_BSC0884-rev11381410261-3FB.jpg","sizes":["12x18"]},
  "p43":{"title":"Ebb","master":"2015_BSC4708-rev1546FB-3.jpg","sizes":["12x18"]},
  "p18":{"title":"Roost","master":"L1010723-Edit.jpg","sizes":["12x18","16x24","24x36"]},
- "p20":{"title":"Season","master":"L1012540-Enhanced-NR-Edit.jpg","sizes":["12x18","16x24","30x45"]},
  "p44":{"title":"Shallow Water","master":"L1010598-Edit-Edit-2-Edit-2.jpg","sizes":["12x18","16x24","30x45"]},
  "p45":{"title":"Mooring","master":"SIV01466.tif","sizes":["12x18","16x24","30x45"]},
  "p19":{"title":"Sticks","master":"_BSC4254-Edit-Edit copy 2.jpg","sizes":["12x18","16x24","24x36"]},
@@ -43,7 +42,8 @@ export const PRINTS = {"p17":{"title":"Tideline","master":"L1012601-Edit.tif","s
  "p04":{"title":"Reveal","master":"L1020183-Edit-Edit-Edit.jpg","sizes":["12x18","16x24","30x45"]},
  "p05":{"title":"Wake","master":"L1020663-2.jpg","sizes":["12x18","16x24","30x45"]},
  "p55":{"title":"Writing on the Wall","master":"L1000825-Edit.jpg","sizes":["12x18","16x24","30x45"]},
- "p56":{"title":"Threadlight","master":"DSC_0745-Edit-Edit.jpg","sizes":["12x18","16x24","30x45"]}};
+ "p56":{"title":"Threadlight","master":"DSC_0745-Edit-Edit.jpg","sizes":["12x18","16x24","30x45"]},
+ "p57":{"title":"Warp","master":"Silk_Loom_Abstract_30x45_200ppi.jpg","sizes":["12x18","16x24","30x45"]}};
 export const PRICES = {"paper":{"12x18":95,"16x24":245,"20x30":325,"24x36":475,"30x45":595,"18x24":245},"canvas":{"12x18":325,"16x24":395,"20x30":495,"24x36":725,"30x45":950,"18x24":450},"metal":{"12x18":295,"16x24":425,"20x30":595,"24x36":850,"30x45":1195,"18x24":475}};
 export const MATERIALS = {"paper":"Paper","canvas":"Canvas","metal":"Metal"};
 export const SIZE_LABELS = {"12x18":"12 × 18","16x24":"16 × 24","20x30":"20 × 30","24x36":"24 × 36","30x45":"30 × 45","18x24":"18 × 24"};
