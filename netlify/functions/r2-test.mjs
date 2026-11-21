@@ -12,7 +12,6 @@ export const MASTERS = {
   "p42": "2014_BSC0884-rev11381410261-3FB.jpg",
   "p43": "2015_BSC4708-rev1546FB-3.jpg",
   "p18": "L1010723-Edit.jpg",
-  "p20": "L1012540-Enhanced-NR-Edit.jpg",
   "p44": "L1010598-Edit-Edit-2-Edit-2.jpg",
   "p45": "SIV01466.tif",
   "p19": "_BSC4254-Edit-Edit copy 2.jpg",
@@ -48,7 +47,8 @@ export const MASTERS = {
   "p04": "L1020183-Edit-Edit-Edit.jpg",
   "p05": "L1020663-2.jpg",
   "p55": "L1000825-Edit.jpg",
-  "p56": "DSC_0745-Edit-Edit.jpg"
+  "p56": "DSC_0745-Edit-Edit.jpg",
+  "p57": "Silk_Loom_Abstract_30x45_200ppi.jpg"
 };
 
 const json = (body, status = 200) =>
