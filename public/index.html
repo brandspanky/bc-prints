@@ -693,7 +693,17 @@ function route() {
     else a.removeAttribute("aria-current");
   });
   window.scrollTo(0, 0);
+  // Name each view, for the browser tab and for StatCounter's visitor paths.
+  const names = { prints: "Prints", portraits: "Portraits", about: "About", thanks: "Thank you" };
+  const label = h.startsWith("print-") ? current.title : names[h];
+  document.title = (label ? label + " · " : "") + "Bruce Cotton Prints";
+  // StatCounter counts the first page load itself; record each later view.
+  if (routed && window._statcounter && typeof window._statcounter.record_pageview === "function") {
+    try { window._statcounter.record_pageview(); } catch (e) {}
+  }
+  routed = true;
 }
+let routed = false;
 window.addEventListener("hashchange", route);
 
 function renderHome() {
@@ -710,5 +720,13 @@ renderTrio();
 renderCart();
 route();
 </script>
+<!-- Statcounter: visitor statistics for cotton.gallery -->
+<script type="text/javascript">
+var sc_project=9660995;
+var sc_invisible=1;
+var sc_security="607e70e1";
+</script>
+<script type="text/javascript" src="https://www.statcounter.com/counter/counter.js" async></script>
+<!-- End of Statcounter Code -->
 </body>
 </html>
