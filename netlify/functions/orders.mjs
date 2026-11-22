@@ -105,7 +105,7 @@ export default async (req) => {
         const url = r2SignedUrl(printFileFor(p.master), { expires: 604800 });
         return { productId, selections, images: [{ url }] };
       });
-      const r = await whcc("/v1/commerce/configured-products", { method: "POST", body: { configuredProducts } });
+      const r = await whcc("/v1/commerce/configured-products", { method: "POST", body: { configuredProducts }, live: o.livemode });
       const ids = (r.data?.items || []).map((x) => x.configuredProductId);
       if (r.status >= 300 || ids.length !== o.items.length)
         return json({ error: "WHCC could not set up the items.", detail: r.data }, 502);
@@ -117,7 +117,7 @@ export default async (req) => {
     if (!ids.length) return json({ error: "Approve the order first." }, 409);
 
     if (action === "status") {
-      const r = await whcc(`/v1/commerce/configured-products?ids=${encodeURIComponent(ids.join(","))}`);
+      const r = await whcc(`/v1/commerce/configured-products?ids=${encodeURIComponent(ids.join(","))}`, { live: o.livemode });
       const items = (r.data?.items || []).map((x) => ({ id: x.configuredProductId, status: x.status, errors: x.errors }));
       return json({ ready: items.length === ids.length && items.every((x) => x.status === "ready"), items });
     }
@@ -125,6 +125,7 @@ export default async (req) => {
     if (action === "submit") {
       const r = await whcc("/v1/commerce/submissions", {
         method: "POST",
+        live: o.livemode,
         headers: { "Idempotency-Key": o.id },
         body: {
           items: ids.map((cid, i) => ({ configuredProductId: cid, quantity: o.items[i].qty })),
