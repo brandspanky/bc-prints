@@ -1,12 +1,15 @@
-// WHCC order API. TEST HOST ONLY for now: going live is a separate,
-// deliberate step that changes this file and adds a live key.
+// WHCC order API.
+// Test orders (Stripe test-mode payments) always go to WHCC's test system.
+// Live orders (real Stripe payments) go to WHCC's live system, which prints,
+// ships and bills. The caller decides by passing { live: session.livemode }.
 const TEST_HOST = "https://apis-stage.whcc.com/api";
+const LIVE_HOST = "https://apis.whcc.com/api";
 const VERSION = "2026-10";
 
-export async function whcc(path, { method = "GET", body, headers = {} } = {}) {
-  const key = process.env.WHCC_SANDBOX_API_KEY;
-  if (!key) throw new Error("WHCC_SANDBOX_API_KEY is not set");
-  const url = TEST_HOST + path;
+export async function whcc(path, { method = "GET", body, headers = {}, live = false } = {}) {
+  const key = live ? process.env.WHCC_LIVE_API_KEY : process.env.WHCC_SANDBOX_API_KEY;
+  if (!key) throw new Error(live ? "WHCC_LIVE_API_KEY is not set" : "WHCC_SANDBOX_API_KEY is not set");
+  const url = (live ? LIVE_HOST : TEST_HOST) + path;
   const res = await fetch(url, {
     method,
     headers: {
@@ -20,7 +23,7 @@ export async function whcc(path, { method = "GET", body, headers = {} } = {}) {
   const text = await res.text();
   let data;
   try { data = JSON.parse(text); } catch { data = { raw: text.slice(0, 1000) }; }
-  console.log(`WHCC ${method} ${path.split("?")[0]} -> ${res.status}`);
+  console.log(`WHCC ${live ? "LIVE" : "test"} ${method} ${path.split("?")[0]} -> ${res.status}`);
   return { status: res.status, data };
 }
 
