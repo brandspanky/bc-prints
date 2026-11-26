@@ -158,6 +158,7 @@ footer { padding: 0 clamp(20px, 6vw, 88px) 48px; font-size: 12px; color: var(--m
 @media (max-width: 640px) {
   .trio { flex-direction: column; max-width: 560px; margin: 0 auto; }
   .trio a { width: 100%; }
+  #view-prints .pager { display: none; }
 }
 @media (max-width: 480px) {
   header { flex-direction: column; gap: 14px; }
@@ -470,10 +471,13 @@ function paint(el, print, large) {
 let page = 0;
 const PER = 3;
 const pages = Math.ceil(PRINTS.length / PER);
+// On phones every print shows in one long scroll; larger screens page three at a time.
+const phone = window.matchMedia("(max-width: 640px)");
+phone.addEventListener("change", () => renderTrio());
 function renderTrio() {
   const wrap = $("#trio");
   wrap.innerHTML = "";
-  PRINTS.slice(page * PER, page * PER + PER).forEach(p => {
+  (phone.matches ? PRINTS : PRINTS.slice(page * PER, page * PER + PER)).forEach(p => {
     const a = document.createElement("a");
     a.href = "#print-" + p.id;
     a.style.flex = `${ratio(p)} 1 0`;
@@ -502,6 +506,18 @@ function turnPage(step, fromBottom) {
 }
 document.querySelectorAll(".prev-page").forEach(b => b.onclick = () => turnPage(-1, !!b.closest(".pager-bottom")));
 document.querySelectorAll(".next-page").forEach(b => b.onclick = () => turnPage(1, !!b.closest(".pager-bottom")));
+// Touch screens wider than a phone (iPads): swipe the prints left or right to turn the page.
+let sx = null, sy = 0;
+$("#trio").addEventListener("touchstart", e => {
+  if (phone.matches || e.touches.length !== 1) { sx = null; return; }
+  sx = e.touches[0].clientX; sy = e.touches[0].clientY;
+}, { passive: true });
+$("#trio").addEventListener("touchend", e => {
+  if (sx === null) return;
+  const dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+  sx = null;
+  if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) turnPage(dx < 0 ? 1 : -1);
+});
 
 // ---- Print detail ----
 let current = null;
@@ -674,6 +690,7 @@ pImgs.forEach(img => img.addEventListener("click", () => {
 // ---- Routing ----
 function route() {
   const h = location.hash.replace("#", "") || "home";
+  if ($("#view-prints").classList.contains("active")) printsY = window.scrollY;
   document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
   let nav = h;
   if (h.startsWith("print-")) {
@@ -692,7 +709,9 @@ function route() {
     if (a.dataset.nav === nav) a.setAttribute("aria-current", "page");
     else a.removeAttribute("aria-current");
   });
-  window.scrollTo(0, 0);
+  // Back from a print on a phone: return to the same spot in the long list
+  window.scrollTo(0, h === "prints" && phone.matches && lastHash.startsWith("print-") ? printsY : 0);
+  lastHash = h;
   // Name each view, for the browser tab and for StatCounter's visitor paths.
   const names = { prints: "Prints", portraits: "Portraits", about: "About", thanks: "Thank you" };
   const label = h.startsWith("print-") ? current.title : names[h];
@@ -704,6 +723,7 @@ function route() {
   routed = true;
 }
 let routed = false;
+let printsY = 0, lastHash = "";
 window.addEventListener("hashchange", route);
 
 function renderHome() {
