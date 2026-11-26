@@ -84,6 +84,12 @@ main { padding: clamp(48px, 9vw, 120px) clamp(20px, 6vw, 88px) 96px; }
 .back:hover { color: var(--ink); }
 .panel h1 { font-family: var(--display); font-weight: 400; font-size: 44px; line-height: 1.05; margin: 0 0 10px; text-wrap: balance; }
 .panel .desc { margin: 0; color: #4a4c50; max-width: 42ch; }
+/* Room scenes: two small thumbnails under the description */
+.rooms { margin-top: 26px; }
+.rooms-label { margin: 0 0 10px; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.rooms-row { display: flex; gap: 12px; }
+.rooms-row button { padding: 0; border: 0; background: var(--mat); cursor: zoom-in; width: 104px; height: 104px; overflow: hidden; }
+.rooms-row img { display: block; width: 100%; height: 100%; object-fit: cover; }
 fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 10px; }
 legend { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; padding: 0; }
 .options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
@@ -223,6 +229,10 @@ footer { padding: 0 clamp(20px, 6vw, 88px) 48px; font-size: 12px; color: var(--m
           <div>
             <h1 id="detailTitle"></h1>
             <p class="desc" id="detailDesc"></p>
+            <div class="rooms" id="rooms" hidden>
+              <p class="rooms-label" id="roomsLabel">In a room</p>
+              <div class="rooms-row" id="roomsRow"></div>
+            </div>
           </div>
         </div>
 
@@ -548,6 +558,27 @@ function updatePrice() {
   $("#price").innerHTML = `${money(PRICES[choice.material][choice.size])}<small>${mat.label}, ${ALL_SIZES.find(s => s.id === choice.size).label} in</small>`;
   $("#addedMsg").textContent = "";
 }
+// Room scenes, true to scale; files are img/rooms/<id>-1.jpg and -2.jpg. Value = size shown.
+const ROOMS = { p17: "30 × 45", p57: "30 × 45", p48: "30 × 45", p22: "30 × 45", p46: "20 × 30" };
+function showRooms() {
+  const size = ROOMS[current.id];
+  $("#rooms").hidden = !size;
+  if (!size) return;
+  $("#roomsLabel").textContent = "In a room · shown at " + size;
+  const set = [1, 2].map(n => ({ src: `img/rooms/${current.id}-${n}.jpg`, alt: `${current.title} on a wall, shown at ${size} inches`, title: `${current.title}, shown at ${size}` }));
+  const row = $("#roomsRow");
+  row.innerHTML = "";
+  set.forEach((it, i) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.setAttribute("aria-label", "View room scene " + (i + 1));
+    const im = document.createElement("img");
+    im.src = it.src; im.alt = it.alt; im.loading = "lazy";
+    b.appendChild(im);
+    b.onclick = () => openViewer(set, i, "rooms");
+    row.appendChild(b);
+  });
+}
 function showPrint(id) {
   current = PRINTS.find(p => p.id === id) || PRINTS[0];
   $("#detail").classList.toggle("landscape", current.orient === "landscape");
@@ -557,6 +588,7 @@ function showPrint(id) {
   paint($("#detailPhoto"), current, true);
   $("#detailTitle").textContent = current.title;
   $("#detailDesc").textContent = current.desc + (current.place ? " " + current.place + "." : "");
+  showRooms();
   buildOptions();
   updatePrice();
 }
